@@ -1,0 +1,35 @@
+Daily <- read.csv(file="Daily.CSV", header=TRUE, sep=",")
+Daily <- 
+  expand.grid(Day = 1:28, Dayweek = factor(unique(Daily$Dayweek))) %>% 
+  mutate(Dengue = Daily$Dengue,
+         y = as.numeric(Dayweek) - 1 + (Day - 1) / 28) 
+bars <- Daily %>% 
+  mutate(Dengue_norm = Dengue / (max(Dengue) * 1.1),
+         xmin = Day - 0.5,
+         xmax = Day + 0.5,
+         ymin = y,
+         ymax = y + Dengue_norm)
+
+poly <- bars %>% 
+  rowwise() %>% 
+  do(with(., data_frame(Dayweek = Dayweek,
+                        Day = Day,
+                        Dengue_norm = Dengue_norm,
+                        x = c(xmin, xmax, xmax, xmin),
+                        y = c(ymin - 1/189, 
+                              ymin + 1/189, 
+                              ymax + 1/198, 
+                              ymax - 1/189))))
+ggplot(poly, aes(x, y, fill = interaction(Day, Dengue_norm))) + 
+  geom_polygon(col = 1) +
+  coord_polar() +
+  ylim(-1, 7) +
+  scale_x_continuous(breaks = 1:28, labels=c("Monday", "Tuesday", "Wednesday",
+                                             "Thursday", "Friday", "Saturday", "Sunday", "Monday", "Tuesday", "Wednesday",
+                                             "Thursday", "Friday", "Saturday", "Sunday", "Monday", "Tuesday", "Wednesday",
+                                             "Thursday", "Friday", "Saturday", "Sunday", "Monday", "Tuesday", "Wednesday",
+                                             "Thursday", "Friday", "Saturday", "Sunday")) +
+  theme_minimal() + 
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.title = element_blank())
+
